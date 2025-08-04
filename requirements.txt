@@ -1,0 +1,17 @@
+fastapi
+uvicorn[standard]
+sqlalchemy
+python-multipart
+python-docx
+PyPDF2
+langchain
+langchain-community
+openai
+python-jose[cryptography]
+passlib[bcrypt]
+python-dotenv
+aiofiles
+jinja2 
+langchain-openai
+langchain-text-splitters
+faiss-cpu
