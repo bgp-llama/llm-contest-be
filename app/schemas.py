@@ -29,6 +29,11 @@ class ChatbotBase(BaseModel):
     system_prompt: Optional[str] = None
 
 
+class McpChatbot(BaseModel):
+    id: int
+    description: Optional[str] = None
+    
+
 class ChatbotCreate(ChatbotBase):
     pass
 

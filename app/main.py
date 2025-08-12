@@ -1,14 +1,19 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
 import os
 from dotenv import load_dotenv
-
+from typing import Optional
+from pydantic import BaseModel
 from app.database import create_tables
 from app.routers import chatbots, chat
+from langchain_mcp_adapters.client import MultiServerMCPClient
+from langgraph.prebuilt import create_react_agent
 
 load_dotenv()
+
+agent = None
 
 
 @asynccontextmanager
@@ -58,3 +63,63 @@ async def root():
 async def health_check():
     """헬스 체크 엔드포인트"""
     return {"status": "healthy"}
+
+
+class MessageRequest(BaseModel):
+    message: Optional[str] = None
+    messages: Optional[str] = None
+
+class MessageResponse(BaseModel):
+    response: str
+    success: bool
+    error: str = None
+
+
+async def get_agent():
+    """MCP 에이전트를 초기화하고 반환합니다."""
+    global agent
+    if agent is None:
+        try:
+            client = MultiServerMCPClient(
+                {
+                    "chatbot": {
+                        "transport": "streamable_http",
+                        "url": "http://localhost:8010/mcp/"
+                    }
+                }
+            )
+            tools = await client.get_tools()
+            agent = create_react_agent("openai:gpt-4o-mini", tools)
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"에이전트 초기화 실패: {str(e)}")
+    return agent
+
+
+@app.post("/invoke", response_model=MessageResponse)
+async def invoke(request: MessageRequest):
+    """자연어 명령을 처리하고 응답을 반환합니다."""
+    try:
+        agent = await get_agent()
+        # message 또는 messages 필드 사용
+        user_message = request.message or request.messages
+        if not user_message:
+            return MessageResponse(
+                response="",
+                success=False,
+                error="메시지가 제공되지 않았습니다."
+            )
+        response = await agent.ainvoke({"messages": user_message})
+        
+        # 응답에서 마지막 메시지 추출
+        last_message = response['messages'][-1].content if response['messages'] else "응답이 없습니다."
+        
+        return MessageResponse(
+            response=last_message,
+            success=True
+        )
+    except Exception as e:
+        return MessageResponse(
+            response="",
+            success=False,
+            error=str(e)
+        )

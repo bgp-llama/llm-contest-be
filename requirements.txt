@@ -14,4 +14,7 @@ aiofiles
 jinja2 
 langchain-openai
 langchain-text-splitters
-faiss-cpu
+requests
+langchain-mcp-adapters
+langgraph
+fastmcp

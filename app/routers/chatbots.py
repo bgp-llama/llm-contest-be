@@ -5,6 +5,7 @@ from app.database import get_db, Chatbot, Document
 from app.schemas import (
     ChatbotCreate,
     Chatbot as ChatbotSchema,
+    McpChatbot,
     Document as DocumentSchema,
 )
 from app.file_processor import FileProcessor
@@ -73,6 +74,11 @@ async def get_chatbots(skip: int = 0, limit: int = 100, db: Session = Depends(ge
     chatbots = db.query(Chatbot).offset(skip).limit(limit).all()
     return chatbots
 
+@router.get("/all", response_model=List[McpChatbot])
+async def get_mcp_chatbots(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    """모든 챗봇 조회"""
+    chatbots = db.query(Chatbot).offset(skip).limit(limit).all()
+    return [McpChatbot(id=chatbot.id, description=chatbot.description) for chatbot in chatbots]
 
 @router.get("/{chatbot_id}", response_model=ChatbotSchema)
 async def get_chatbot(chatbot_id: int, db: Session = Depends(get_db)):

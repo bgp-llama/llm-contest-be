@@ -1,7 +1,7 @@
 import os
 import PyPDF2
 from docx import Document as DocxDocument
-from typing import Optional
+from typing import Optional, Tuple
 import aiofiles
 import tempfile
 
@@ -50,7 +50,7 @@ class FileProcessor:
     @staticmethod
     async def save_uploaded_file(
         upload_file, upload_dir: str = "uploads"
-    ) -> tuple[str, str]:
+    ) -> Tuple[str, str]:
         """업로드된 파일을 저장하고 파일 경로와 타입 반환"""
         # 업로드 디렉토리 생성
         os.makedirs(upload_dir, exist_ok=True)
