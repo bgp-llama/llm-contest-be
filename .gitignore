@@ -7,7 +7,7 @@ __pycache__/
 ### Common ###
 .env
 .venv/
+.myvenv/
 
 ### Custom ###
 uploads/
-chatbot.db

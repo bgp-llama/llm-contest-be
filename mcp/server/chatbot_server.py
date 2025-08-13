@@ -62,4 +62,4 @@ if __name__ == "__main__":
     print("🚀 Chatbot MCP 서버 시작 (포트: 8010)")
     
     # streamable-http 모드로 서버 실행
-    mcp.run(transport="http", host="0.0.0.0", port=8010) 
+    mcp.run(transport="streamable-http", host="0.0.0.0", port=8010) 
