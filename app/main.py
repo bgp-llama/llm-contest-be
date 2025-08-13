@@ -67,7 +67,6 @@ async def health_check():
 
 class MessageRequest(BaseModel):
     message: Optional[str] = None
-    messages: Optional[str] = None
 
 class MessageResponse(BaseModel):
     response: str
@@ -101,7 +100,7 @@ async def invoke(request: MessageRequest):
     try:
         agent = await get_agent()
         # message 또는 messages 필드 사용
-        user_message = request.message or request.messages
+        user_message = request.message
         if not user_message:
             return MessageResponse(
                 response="",
