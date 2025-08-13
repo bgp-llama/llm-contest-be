@@ -6,10 +6,11 @@ import os
 from dotenv import load_dotenv
 from typing import Optional
 from pydantic import BaseModel
-from app.database import create_tables
+from app.database import create_tables, SessionLocal
 from app.routers import chatbots, chat
 from langchain_mcp_adapters.client import MultiServerMCPClient
 from langgraph.prebuilt import create_react_agent
+from insert_mock import seed
 
 load_dotenv()
 
@@ -20,6 +21,9 @@ agent = None
 async def lifespan(_: FastAPI):
     """애플리케이션 생명주기 관리"""
     create_tables()
+    with SessionLocal() as db:
+        # Mock 데이터 삽입
+        seed(db)
     yield
 
 
@@ -68,6 +72,7 @@ async def health_check():
 class MessageRequest(BaseModel):
     message: Optional[str] = None
 
+
 class MessageResponse(BaseModel):
     response: str
     success: bool
@@ -83,14 +88,16 @@ async def get_agent():
                 {
                     "chatbot": {
                         "transport": "streamable_http",
-                        "url": "http://localhost:8010/mcp/"
+                        "url": "http://localhost:8010/mcp/",
                     }
                 }
             )
             tools = await client.get_tools()
             agent = create_react_agent("openai:gpt-4o-mini", tools)
         except Exception as e:
-            raise HTTPException(status_code=500, detail=f"에이전트 초기화 실패: {str(e)}")
+            raise HTTPException(
+                status_code=500, detail=f"에이전트 초기화 실패: {str(e)}"
+            )
     return agent
 
 
@@ -103,22 +110,17 @@ async def invoke(request: MessageRequest):
         user_message = request.message
         if not user_message:
             return MessageResponse(
-                response="",
-                success=False,
-                error="메시지가 제공되지 않았습니다."
+                response="", success=False, error="메시지가 제공되지 않았습니다."
             )
         response = await agent.ainvoke({"messages": user_message})
-        
+
         # 응답에서 마지막 메시지 추출
-        last_message = response['messages'][-1].content if response['messages'] else "응답이 없습니다."
-        
-        return MessageResponse(
-            response=last_message,
-            success=True
+        last_message = (
+            response["messages"][-1].content
+            if response["messages"]
+            else "응답이 없습니다."
         )
+
+        return MessageResponse(response=last_message, success=True)
     except Exception as e:
-        return MessageResponse(
-            response="",
-            success=False,
-            error=str(e)
-        )
+        return MessageResponse(response="", success=False, error=str(e))

@@ -1,35 +1,4 @@
-import os
-from datetime import datetime
-from sqlalchemy import create_engine, Column, Integer, String, Text, DateTime, ForeignKey
-from sqlalchemy.orm import sessionmaker, declarative_base, relationship
-
-# ===== DB 연결 =====
-DATABASE_URL = os.environ.get("DATABASE_URL", "sqlite:///./chatbot.db")
-engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
-SessionLocal = sessionmaker(bind=engine, autocommit=False, autoflush=False, expire_on_commit=False)
-Base = declarative_base()
-
-# ===== 테이블 매핑 (테이블 생성은 하지 않음: create_all 호출 X) =====
-class Chatbot(Base):
-    __tablename__ = "chatbots"
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, index=True)
-    description = Column(Text)
-    model_name = Column(String)
-    system_prompt = Column(Text)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    documents = relationship("Document", back_populates="chatbot")
-
-class Document(Base):
-    __tablename__ = "documents"
-    id = Column(Integer, primary_key=True, index=True)
-    filename = Column(String)
-    file_path = Column(String)
-    file_type = Column(String)   # 주석상 pdf/docx/hwp지만, 실제로는 제약 없음. 여기선 pdf로 일괄.
-    content = Column(Text)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    chatbot_id = Column(Integer, ForeignKey("chatbots.id"))
-    chatbot = relationship("Chatbot", back_populates="documents")
+from app.database import Document, Chatbot
 
 # ===== 목데이터 =====
 SEED = [
@@ -53,9 +22,9 @@ SEED = [
 Q. 졸업유예 가능한가요?
 A. 가능. 졸업요건 충족 상태에서 유예 신청(학기 단위). 등록금은 유예 등록금 기준.
 Q. 초과학기 등록금은?
-A. 수강학점에 따라 차등(0~3학점/4~6학점/7학점 이상 구간)."""
+A. 수강학점에 따라 차등(0~3학점/4~6학점/7학점 이상 구간).""",
             }
-        ]
+        ],
     },
     {
         "name": "수강신청·시간표 도우미",
@@ -74,9 +43,9 @@ A. 수강학점에 따라 차등(0~3학점/4~6학점/7학점 이상 구간)."""
 1) 전공필수 우선 배치
 2) 교양은 도메인 분산(글쓰기/외국어/수리/인문)
 3) 강의평가 4.0↑ 우선 검토
-[TIP] 인기과목 대기: 정정기간 첫날 09:00 재시도 권장"""
+[TIP] 인기과목 대기: 정정기간 첫날 09:00 재시도 권장""",
             }
-        ]
+        ],
     },
     {
         "name": "도서관 길잡이",
@@ -96,9 +65,9 @@ A. 수강학점에 따라 차등(0~3학점/4~6학점/7학점 이상 구간)."""
 - 상호대차: 소속도서관에 신청(평균 3~5일 소요)
 [FAQ]
 Q. 분실 시?
-A. 동일 자료 변상 또는 시가 변상 + 행정수수료."""
+A. 동일 자료 변상 또는 시가 변상 + 행정수수료.""",
             }
-        ]
+        ],
     },
     {
         "name": "식단표·시설 안내",
@@ -116,9 +85,9 @@ A. 동일 자료 변상 또는 시가 변상 + 행정수수료."""
 [시설 안내]
 - 열람실: 24시간, 좌석 배정 앱 필수
 - 체육관: 평일 09:00~21:00, 주말 예약제
-- 스터디룸: 2시간 단위 예약, 노쇼 2회 시 1주 제한"""
+- 스터디룸: 2시간 단위 예약, 노쇼 2회 시 1주 제한""",
             }
-        ]
+        ],
     },
     {
         "name": "캠퍼스 길찾기",
@@ -134,9 +103,9 @@ A. 동일 자료 변상 또는 시가 변상 + 행정수수료."""
 [이동 팁]
 - 공대 ↔ 중앙도서관: 지하 연결통로 이용 시 우천시 유리
 - 주차: B2 주차장 만차 시 체육관 주차장 권장(셔틀 10분 간격)
-- 장애인/유아 동반 동선: 엘리베이터·경사로 지도 제공"""
+- 장애인/유아 동반 동선: 엘리베이터·경사로 지도 제공""",
             }
-        ]
+        ],
     },
     {
         "name": "장학금 상담",
@@ -154,9 +123,9 @@ A. 동일 자료 변상 또는 시가 변상 + 행정수수료."""
 - 소득: 한국장학재단 소득분위 기준 확인
 - 서류: 성적증명서, 통장사본, 가족관계증명서(해당 시)
 [근로장학]
-- 근무시간 주 10~12시간, 시급 교내 기준 적용"""
+- 근무시간 주 10~12시간, 시급 교내 기준 적용""",
             }
-        ]
+        ],
     },
     {
         "name": "기숙사 안내",
@@ -177,9 +146,9 @@ A. 동일 자료 변상 또는 시가 변상 + 행정수수료."""
 [벌점]
 - 무단외박 5점, 실내흡연 10점(퇴사 조치), 소방설비 훼손 10점
 [퇴사]
-- 퇴실점검(비품/청결) 후 키 반납, 보증금 정산 7일 이내"""
+- 퇴실점검(비품/청결) 후 키 반납, 보증금 정산 7일 이내""",
             }
-        ]
+        ],
     },
     {
         "name": "IT 헬프데스크",
@@ -197,9 +166,9 @@ A. 동일 자료 변상 또는 시가 변상 + 행정수수료."""
 [VPN]
 - 클라이언트 버전 최신화, 프로필 재설정, MFA 토큰 동기화
 [무선랜]
-- eduroam SSID, 기관 계정형식 user@univ.ac.kr, EAP-TTLS/PAP"""
+- eduroam SSID, 기관 계정형식 user@univ.ac.kr, EAP-TTLS/PAP""",
             }
-        ]
+        ],
     },
     {
         "name": "시설물 고장 접수",
@@ -215,9 +184,9 @@ A. 동일 자료 변상 또는 시가 변상 + 행정수수료."""
 [우선순위]
 - 긴급(누수/정전/가스): 2시간 내 출동
 - 보통(비품교체/경미수리): 3영업일
-[필수정보] 위치(건물/호실), 증상, 사진, 연락처"""
+[필수정보] 위치(건물/호실), 증상, 사진, 연락처""",
             }
-        ]
+        ],
     },
     {
         "name": "취업·진로 상담",
@@ -233,9 +202,9 @@ A. 동일 자료 변상 또는 시가 변상 + 행정수수료."""
 - 2학년: 프로젝트/대외활동/기술스택
 - 3학년: 인턴십/자격증/영어
 - 4학년: 포트폴리오 완성/면접
-[자소서 팁] STAR 기법(상황-과제-행동-결과)로 구체화"""
+[자소서 팁] STAR 기법(상황-과제-행동-결과)로 구체화""",
             }
-        ]
+        ],
     },
     {
         "name": "연구지원 챗봇",
@@ -252,9 +221,9 @@ A. 동일 자료 변상 또는 시가 변상 + 행정수수료."""
 [장비 예약]
 - 공용장비 포털, 안전교육 이수 후 사용 가능
 [안전]
-- 화학물질 관리: MSDS 비치, 폐시약 분리 배출"""
+- 화학물질 관리: MSDS 비치, 폐시약 분리 배출""",
             }
-        ]
+        ],
     },
     {
         "name": "국제교류·유학생 지원",
@@ -269,9 +238,9 @@ A. 동일 자료 변상 또는 시가 변상 + 행정수수료."""
 - 요건: 평점 3.0↑, 어학 성적(영어/현지어), 추천서
 - 학점인정: 사전승인 과목만, 성적표 제출 필수
 [유학생 지원]
-- 비자 연장, 건강보험, 외국인등록증, 기숙사 우선 배정"""
+- 비자 연장, 건강보험, 외국인등록증, 기숙사 우선 배정""",
             }
-        ]
+        ],
     },
     {
         "name": "등록금·장부/재무",
@@ -287,9 +256,9 @@ A. 동일 자료 변상 또는 시가 변상 + 행정수수료."""
 [환불]
 - 개강 전: 전액, 개강 후 30일 이내: 5/6 반환, 60일 이내: 2/3, 90일 이내: 1/2
 [감면]
-- 다자녀/국가유공자/교직원 자녀/형편곤란 등 요건 충족 시 신청"""
+- 다자녀/국가유공자/교직원 자녀/형편곤란 등 요건 충족 시 신청""",
             }
-        ]
+        ],
     },
     {
         "name": "교직원 행정 비서",
@@ -306,9 +275,9 @@ A. 동일 자료 변상 또는 시가 변상 + 행정수수료."""
 [출장]
 - 사전결재, 영수증/교통비 정산, 보고서 제출 7일 이내
 [회의실/차량]
-- 포털 예약, 사용 후 정리 상태 사진 업로드"""
+- 포털 예약, 사용 후 정리 상태 사진 업로드""",
             }
-        ]
+        ],
     },
     {
         "name": "보건·상담 센터",
@@ -324,9 +293,9 @@ A. 동일 자료 변상 또는 시가 변상 + 행정수수료."""
 - 무료 예방접종 캠페인(독감/간염 시즌제)
 [상담]
 - 개인/집단 상담, 초기상담 후 배정
-- 위기대응: 자해 위험 시 즉시 응급연락 체계 가동"""
+- 위기대응: 자해 위험 시 즉시 응급연락 체계 가동""",
             }
-        ]
+        ],
     },
     {
         "name": "주차·교통 안내",
@@ -342,14 +311,14 @@ A. 동일 자료 변상 또는 시가 변상 + 행정수수료."""
 - 요금: 월정액(학생 2만원, 교직원 3만원), 일일권 3천원
 - 대체주차: 만차 시 외부 제휴주차장 2곳
 [셔틀]
-- 순환 10분 간격(08:20~18:00), 방학 중 20분"""
+- 순환 10분 간격(08:20~18:00), 방학 중 20분""",
             }
-        ]
-    }
+        ],
+    },
 ]
 
-def seed():
-    db = SessionLocal()
+
+def seed(db):
     try:
         # idempotent 시드를 위해 documents → chatbots 순으로 비움
         # (원하지 않으면 아래 두 줄 주석)
@@ -368,19 +337,19 @@ def seed():
             db.add(bot)
             db.flush()  # bot.id 확보
             for doc in item.get("documents", []):
-                db.add(Document(
-                    filename=doc["filename"],
-                    file_path="",                 # 파일 경로 미사용
-                    file_type=doc.get("file_type", "pdf"),
-                    content=doc["content"],
-                    chatbot_id=bot.id
-                ))
+                db.add(
+                    Document(
+                        filename=doc["filename"],
+                        file_path="",  # 파일 경로 미사용
+                        file_type=doc.get("file_type", "pdf"),
+                        content=doc["content"],
+                        chatbot_id=bot.id,
+                    )
+                )
             inserted += 1
         db.commit()
-        print(f"✅ chatbots: {inserted}개, documents: {db.query(Document).count()}개 삽입 완료")
+        print(
+            f"✅ chatbots: {inserted}개, documents: {db.query(Document).count()}개 삽입 완료"
+        )
     finally:
         db.close()
-
-if __name__ == "__main__":
-    print(f"Seeding to: {DATABASE_URL}")
-    seed()
