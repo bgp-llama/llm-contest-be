@@ -4,6 +4,8 @@ from typing import List, Optional, Tuple
 
 from app.database import get_db, Chatbot, Conversation, Message
 from app.schemas import (
+    QuickChatRequest,
+    QuickChatResponse,
     ChatRequest,
     ChatResponse,
     ConversationCreate,
@@ -15,6 +17,26 @@ from app.llm_service import LLMService
 router = APIRouter(prefix="/chat", tags=["chat"])
 
 llm_service = LLMService()
+
+
+@router.post("/quick", response_model=QuickChatResponse)
+async def chat_with_bot_quick(request: QuickChatRequest, db: Session = Depends(get_db)):
+    try:
+        # 챗봇 조회
+        chatbot = db.query(Chatbot).filter(Chatbot.id == request.chatbot_id).first()
+        if not chatbot:
+            raise HTTPException(status_code=404, detail="챗봇을 찾을 수 없습니다")
+
+        # AI 응답 생성
+        response = await llm_service.chat_with_llm(
+            request.message, chatbot.system_prompt, (), chatbot.model_name
+        )
+
+        return QuickChatResponse(message=response)
+
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.post("/", response_model=ChatResponse)

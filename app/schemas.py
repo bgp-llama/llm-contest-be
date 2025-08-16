@@ -32,7 +32,7 @@ class ChatbotBase(BaseModel):
 class McpChatbot(BaseModel):
     id: int
     description: Optional[str] = None
-    
+
 
 class ChatbotCreate(ChatbotBase):
     pass
@@ -105,6 +105,13 @@ class Message(MessageBase):
 
 
 # Chat 스키마
+
+
+class QuickChatRequest(BaseModel):
+    message: str
+    chatbot_id: int
+
+
 class ChatRequest(BaseModel):
     message: str
     conversation_id: int
@@ -113,6 +120,10 @@ class ChatRequest(BaseModel):
 class ChatResponse(BaseModel):
     message: str
     conversation_id: int
+
+
+class QuickChatResponse(BaseModel):
+    message: str
 
 
 # 추천 스키마
