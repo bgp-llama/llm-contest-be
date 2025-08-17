@@ -107,15 +107,6 @@ class LLMService:
                 result = await asyncio.to_thread(lambda: chain(payload))
 
             response = result.get("answer", "")
-            source_documents = result.get("source_documents", [])
-
-            if source_documents:
-                response += "\n\n참고 문서: " + ", ".join(
-                    [
-                        doc.metadata.get("source", "알 수 없음")
-                        for doc in source_documents[:3]
-                    ]
-                )
 
             return response
         except Exception as e:
