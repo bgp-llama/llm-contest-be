@@ -18,3 +18,4 @@ requests
 langchain-mcp-adapters
 langgraph
 fastmcp
+faiss-cpu
