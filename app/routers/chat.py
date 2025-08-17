@@ -28,9 +28,18 @@ async def chat_with_bot_quick(request: QuickChatRequest, db: Session = Depends(g
             raise HTTPException(status_code=404, detail="챗봇을 찾을 수 없습니다")
 
         # AI 응답 생성
-        response = await llm_service.chat_with_llm(
-            request.message, chatbot.system_prompt, (), chatbot.model_name
-        )
+        if chatbot.documents:
+            # RAG 사용
+            documents = [doc.content for doc in chatbot.documents]
+            chain = await llm_service.create_rag_chain(documents, chatbot.model_name)
+            response = await llm_service.chat_with_rag(
+                request.message, chain, [], chatbot.system_prompt
+            )
+        else:
+            # 일반 LLM 사용
+            response = await llm_service.chat_with_llm(
+                request.message, chatbot.system_prompt, [], chatbot.model_name
+            )
 
         return QuickChatResponse(message=response)
 
